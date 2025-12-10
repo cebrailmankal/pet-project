@@ -1,4 +1,4 @@
-package model;
+package com.petsystem.pet_project.model;
 
 public class HealthRecord {
     private String date;

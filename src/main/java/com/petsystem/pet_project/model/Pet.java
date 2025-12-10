@@ -1,5 +1,4 @@
-package model;
-
+package com.petsystem.pet_project.model;
 import java.util.ArrayList;
 import java.util.List;
 

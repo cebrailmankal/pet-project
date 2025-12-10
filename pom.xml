@@ -9,10 +9,11 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.petsystem</groupId>
-	<artifactId>pet-project</artifactId>
+
+	<artifactId>pet-system</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>pet-project</name>
-	<description>Demo project for Spring Boot</description>
+	<name>Pet System</name>
+	<description>Pet Adoption and Care System</description>
 	<url/>
 	<licenses>
 		<license/>

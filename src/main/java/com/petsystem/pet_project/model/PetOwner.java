@@ -1,4 +1,4 @@
-package model;
+package com.petsystem.pet_project.model;
 
 import repository.AdoptionRequestCSVWriter;
 import repository.PetFileWriter;

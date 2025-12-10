@@ -1,4 +1,4 @@
-package model;
+package com.petsystem.pet_project.model;
 
 public abstract class User {
     private String name;
