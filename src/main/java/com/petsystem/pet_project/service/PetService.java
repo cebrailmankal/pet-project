@@ -1,9 +1,10 @@
 package com.petsystem.pet_project.service;
 
 import com.petsystem.pet_project.model.Pet;
-import com.petsystem.pet_project.model.User;
 import com.petsystem.pet_project.model.Role;
+import com.petsystem.pet_project.model.User;
 import com.petsystem.pet_project.repository.PetRepository;
+import com.petsystem.pet_project.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,40 +13,50 @@ import java.util.List;
 public class PetService {
 
     private final PetRepository petRepository;
+    private final UserRepository userRepository;
 
-    public PetService(PetRepository petRepository) {
+    public PetService(PetRepository petRepository,
+                      UserRepository userRepository) {
         this.petRepository = petRepository;
+        this.userRepository = userRepository;
     }
 
-    public Pet addPet(Pet pet, User currentUser) {
-        if (currentUser.getRole() != Role.OWNER) {
-            throw new RuntimeException("Only PET OWNER can add pets");
+    public Pet addPet(Pet pet, String mail) {
+
+        User owner = userRepository.findByMail(mail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (owner.getRole() != Role.OWNER) {
+            throw new RuntimeException("Only OWNER can add pets");
         }
-        pet.setOwner(currentUser);
+
+        pet.setOwner(owner);
         pet.setStatus("AVAILABLE");
-        return petRepository.save(pet);
-    }
 
-    public List<Pet> getMyPets(User currentUser) {
-        if (currentUser.getRole() != Role.OWNER) {
-            throw new RuntimeException("Only PET OWNER can view their pets");
-        }
-        return petRepository.findByOwner(currentUser);
+        return petRepository.save(pet);
     }
 
     public List<Pet> getAvailablePets() {
         return petRepository.findByStatus("AVAILABLE");
     }
 
-    public void deletePet(Long petId, User currentUser) {
+    public List<Pet> getMyPets(String mail) {
+
+        User owner = userRepository.findByMail(mail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return petRepository.findByOwner(owner);
+    }
+
+    public void deletePet(Long petId, String mail) {
+
+        User owner = userRepository.findByMail(mail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new RuntimeException("Pet not found"));
 
-        if (currentUser.getRole() != Role.OWNER) {
-            throw new RuntimeException("Only PET OWNER can delete pets");
-        }
-
-        if (!pet.getOwner().getId().equals(currentUser.getId())) {
+        if (!pet.getOwner().getId().equals(owner.getId())) {
             throw new RuntimeException("You can only delete your own pets");
         }
 

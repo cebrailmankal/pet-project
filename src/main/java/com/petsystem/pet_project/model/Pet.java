@@ -15,7 +15,6 @@ public class Pet {
     private String species;
     private int age;
 
-    @Column(nullable = false)
     private String status; // AVAILABLE, ADOPTED
 
     @ManyToOne

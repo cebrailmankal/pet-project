@@ -12,15 +12,12 @@ public class AdoptionRequest {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
     @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Status status;
 
     public enum Status {
