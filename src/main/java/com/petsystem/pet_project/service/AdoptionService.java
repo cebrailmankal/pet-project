@@ -1,3 +1,14 @@
+package com.petsystem.pet_project.service;
+
+import com.petsystem.pet_project.model.AdoptionRequest;
+import com.petsystem.pet_project.model.Pet;
+import com.petsystem.pet_project.model.User;
+import com.petsystem.pet_project.repository.AdoptionRequestRepository;
+import com.petsystem.pet_project.repository.PetRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 @Service
 public class AdoptionService {
 
@@ -15,11 +26,12 @@ public class AdoptionService {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new RuntimeException("Pet not found"));
 
-        if (pet.getStatus() != PetStatus.AVAILABLE) {
+        if (!"AVAILABLE".equals(pet.getStatus())) {
             throw new RuntimeException("Pet is not available for adoption");
         }
 
-        if (pet.getOwner().getId().equals(requester.getId())) {
+        if (pet.getOwner() != null &&
+                pet.getOwner().getId().equals(requester.getId())) {
             throw new RuntimeException("You cannot adopt your own pet");
         }
 
@@ -39,21 +51,22 @@ public class AdoptionService {
         Pet pet = request.getPet();
 
         if (!pet.getOwner().getId().equals(owner.getId())) {
-            throw new RuntimeException("Only pet owner can approve this request");
+            throw new RuntimeException("Only pet owner can approve");
         }
 
-        // Pet ownership transfer
+        // Sahip değiştir
         pet.setOwner(request.getRequester());
-        pet.setStatus(PetStatus.ADOPTED);
+        pet.setStatus("ADOPTED");
         petRepository.save(pet);
 
-        // Approve selected request
+        // Bu isteği onayla
         request.setStatus(AdoptionRequest.Status.APPROVED);
         requestRepository.save(request);
 
-        // Reject others
+        // Diğer pending istekleri reddet
         List<AdoptionRequest> others =
-                requestRepository.findByPetAndStatus(pet, AdoptionRequest.Status.PENDING);
+                requestRepository.findByPetAndStatus(
+                        pet, AdoptionRequest.Status.PENDING);
 
         for (AdoptionRequest r : others) {
             r.setStatus(AdoptionRequest.Status.REJECTED);

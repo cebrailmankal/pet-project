@@ -1,3 +1,8 @@
+package com.petsystem.pet_project.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
 @Entity
 @Data
 public class Pet {
@@ -10,8 +15,8 @@ public class Pet {
     private String species;
     private int age;
 
-    @Enumerated(EnumType.STRING)
-    private PetStatus status;
+    @Column(nullable = false)
+    private String status; // AVAILABLE, ADOPTED
 
     @ManyToOne
     @JoinColumn(name = "owner_id")

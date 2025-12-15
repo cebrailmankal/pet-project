@@ -2,7 +2,7 @@ package com.petsystem.pet_project.service;
 
 import com.petsystem.pet_project.model.Pet;
 import com.petsystem.pet_project.model.User;
-import com.petsystem.pet_project.model.User.Role;
+import com.petsystem.pet_project.model.Role;
 import com.petsystem.pet_project.repository.PetRepository;
 import org.springframework.stereotype.Service;
 
