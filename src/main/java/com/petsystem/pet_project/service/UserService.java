@@ -16,9 +16,9 @@ public class UserService {
 
     public User register(User user) {
         // mail'e göre rol belirleme
-        if (user.getMail().endsWith("@petowner.com")) {
-            user.setRole(Role.OWNER);
-        } else if (user.getMail().endsWith("@vet.com")) {
+        if (user.getEmail().endsWith("@petowner.com")) {
+            user.setRole(Role.PET_OWNER);
+        } else if (user.getEmail().endsWith("@vet.com")) {
             user.setRole(Role.VET);
         } else {
             user.setRole(Role.ADMIN);

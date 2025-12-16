@@ -27,7 +27,7 @@ public class AdoptionService {
 
     public AdoptionRequest requestAdoption(Long petId, String mail) {
 
-        User requester = userRepository.findByMail(mail)
+        User requester = userRepository.findByEmail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Pet pet = petRepository.findById(petId)

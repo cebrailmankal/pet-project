@@ -26,7 +26,7 @@ public class PetService {
         User owner = userRepository.findByMail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (owner.getRole() != Role.OWNER) {
+        if (owner.getRole() != Role.PET_OWNER) {
             throw new RuntimeException("Only OWNER can add pets");
         }
 
@@ -50,7 +50,7 @@ public class PetService {
 
     public void deletePet(Long petId, String mail) {
 
-        User owner = userRepository.findByMail(mail)
+        User owner = userRepository.findByEmail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Pet pet = petRepository.findById(petId)
