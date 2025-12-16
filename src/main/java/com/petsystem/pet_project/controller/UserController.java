@@ -1,40 +1,26 @@
 package com.petsystem.pet_project.controller;
 
-import com.petsystem.pet_project.model.Pet;
-import com.petsystem.pet_project.service.PetService;
+import com.petsystem.pet_project.model.User;
+import com.petsystem.pet_project.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/pets")
+@RequestMapping("/api/users")
 public class UserController {
 
-    private final PetService petService;
+    private final UserService userService;
 
-    public UserController(PetService petService) {
-        this.petService = petService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping
-    public Pet addPet(@RequestBody Pet pet,
-                      @RequestParam String mail) {
-        return petService.addPet(pet, mail);
+    public User register(@RequestBody User user) {
+        return userService.register(user);
     }
 
-    @GetMapping("/available")
-    public List<Pet> availablePets() {
-        return petService.getAvailablePets();
-    }
-
-    @GetMapping("/my")
-    public List<Pet> myPets(@RequestParam String mail) {
-        return petService.getMyPets(mail);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deletePet(@PathVariable Long id,
-                          @RequestParam String mail) {
-        petService.deletePet(id, mail);
+    @GetMapping("/ping")
+    public String ping() {
+        return "users controller alive";
     }
 }
