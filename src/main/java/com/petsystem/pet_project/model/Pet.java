@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class Pet {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
