@@ -33,7 +33,15 @@ public class PetController {
     public void deletePet(@PathVariable Long id, @RequestParam String mail) {
         petService.deletePet(id, mail);
     }
-
+    @PutMapping("/{id}")
+    public Pet updatePet(@PathVariable Long id,
+                         @RequestParam("name") String name,
+                         @RequestParam("species") String species,
+                         @RequestParam("age") int age,
+                         @RequestParam(value = "image", required = false) MultipartFile image,
+                         @RequestParam("mail") String mail) throws IOException {
+        return petService.updatePet(id, name, species, age, image, mail);
+    }
     @GetMapping("/available")
     public List<Pet> availablePets() { return petService.getAvailablePets(); }
 
