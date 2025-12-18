@@ -28,7 +28,7 @@ public class PetService {
         this.healthRecordRepository = healthRecordRepository;
     }
 
-    // --- FOTOĞRAF KAYDETME (Türkçe Karakter Sorununu Çözen Yöntem) ---
+    // RESİM KAYDETME (Türkçe karakter ve çakışma önleyici)
     private String saveImage(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) return null;
 
@@ -36,14 +36,12 @@ public class PetService {
         File dir = new File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
 
-        // Dosyanın orijinal uzantısını al (.jpg, .png gibi)
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-
-        // Rastgele benzersiz bir isim oluştur (Türkçe karakter derdi kalmaz)
+        // Benzersiz isim oluştur
         String fileName = UUID.randomUUID().toString() + extension;
         String filePath = uploadDir + File.separator + fileName;
 
@@ -51,10 +49,10 @@ public class PetService {
         return "/photos/" + fileName;
     }
 
-    // --- PET İŞLEMLERİ ---
+    // PET EKLEME
     public Pet addPet(String name, String species, int age, MultipartFile imageFile, String mail) throws IOException {
-        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-        if (owner.getRole() != Role.PET_OWNER) throw new RuntimeException("Sadece sahipler ekleyebilir");
+        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
+        if (owner.getRole() != Role.PET_OWNER) throw new RuntimeException("Yetkisiz");
 
         Pet pet = new Pet();
         pet.setName(name);
@@ -69,37 +67,52 @@ public class PetService {
         return petRepository.save(pet);
     }
 
+    // PET GÜNCELLEME (Edit)
+    public Pet updatePet(Long petId, String name, String species, int age, MultipartFile imageFile, String mail) throws IOException {
+        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
+        Pet pet = petRepository.findById(petId).orElseThrow(() -> new RuntimeException("Pet yok"));
+
+        if (!pet.getOwner().getId().equals(owner.getId())) throw new RuntimeException("Sadece kendi hayvanını düzenleyebilirsin");
+
+        pet.setName(name);
+        pet.setSpecies(species);
+        pet.setAge(age);
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            pet.setImage(saveImage(imageFile));
+        }
+        return petRepository.save(pet);
+    }
+
     public void deletePet(Long petId, String mail) {
-        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-        Pet pet = petRepository.findById(petId).orElseThrow(() -> new RuntimeException("Pet bulunamadı"));
-        if (!pet.getOwner().getId().equals(owner.getId())) throw new RuntimeException("Sadece kendi hayvanını silebilirsin");
+        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
+        Pet pet = petRepository.findById(petId).orElseThrow(() -> new RuntimeException("Pet yok"));
+        if (!pet.getOwner().getId().equals(owner.getId())) throw new RuntimeException("Yetkisiz");
         petRepository.delete(pet);
     }
 
     public List<Pet> getAvailablePets() { return petRepository.findByStatus("AVAILABLE"); }
-
     public List<Pet> getMyPets(String mail) {
-        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        User owner = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
         return petRepository.findByOwner(owner);
     }
 
-    // --- SAĞLIK KAYITLARI (VETERİNER) ---
+    // --- VETERİNER İŞLEMLERİ ---
     public HealthRecord addHealthRecord(Long petId, HealthRecord record, String mail) {
-        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-        if (vet.getRole() != Role.VET) throw new RuntimeException("Sadece Veteriner ekleyebilir");
+        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
+        if (vet.getRole() != Role.VET) throw new RuntimeException("Sadece veteriner ekleyebilir");
 
-        Pet pet = petRepository.findById(petId).orElseThrow(() -> new RuntimeException("Pet not found"));
+        Pet pet = petRepository.findById(petId).orElseThrow(() -> new RuntimeException("Pet bulunamadı"));
         record.setPet(pet);
         record.setVetName(vet.getName());
         return healthRecordRepository.save(record);
     }
 
     public HealthRecord updateHealthRecord(Long recordId, HealthRecord newInfo, String mail) {
-        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("User not found"));
-        HealthRecord record = healthRecordRepository.findById(recordId).orElseThrow(() -> new RuntimeException("Kayıt bulunamadı"));
+        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
+        if (vet.getRole() != Role.VET) throw new RuntimeException("Yetkisiz");
 
-        if (vet.getRole() != Role.VET) throw new RuntimeException("Yetkiniz yok");
-
+        HealthRecord record = healthRecordRepository.findById(recordId).orElseThrow(() -> new RuntimeException("Kayıt yok"));
         record.setDiagnosis(newInfo.getDiagnosis());
         record.setTreatment(newInfo.getTreatment());
         record.setNotes(newInfo.getNotes());
@@ -108,14 +121,13 @@ public class PetService {
     }
 
     public void deleteHealthRecord(Long recordId, String mail) {
-        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("User not found"));
-        if (vet.getRole() != Role.VET) throw new RuntimeException("Yetkiniz yok");
+        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
+        if (vet.getRole() != Role.VET) throw new RuntimeException("Yetkisiz");
         healthRecordRepository.deleteById(recordId);
     }
 
-    // Veterinerin kendi eklediği tüm kayıtları getirir
     public List<HealthRecord> getRecordsByVet(String mail) {
-        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("User not found"));
+        User vet = userRepository.findByEmail(mail).orElseThrow(() -> new RuntimeException("Kullanıcı yok"));
         return healthRecordRepository.findByVetName(vet.getName());
     }
 
