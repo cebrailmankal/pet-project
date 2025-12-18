@@ -8,7 +8,9 @@ import com.petsystem.pet_project.repository.PetRepository;
 import com.petsystem.pet_project.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AdoptionService {
@@ -26,7 +28,6 @@ public class AdoptionService {
     }
 
     public AdoptionRequest requestAdoption(Long petId, String mail) {
-
         User requester = userRepository.findByEmail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -44,6 +45,7 @@ public class AdoptionService {
 
         return requestRepository.save(request);
     }
+
     public void rejectRequest(Long requestId, String mail) {
         User owner = userRepository.findByEmail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -52,7 +54,6 @@ public class AdoptionService {
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
         Pet pet = request.getPet();
-
         if (!pet.getOwner().getId().equals(owner.getId())) {
             throw new RuntimeException("Only owner can reject requests");
         }
@@ -60,8 +61,8 @@ public class AdoptionService {
         request.setStatus(AdoptionRequest.Status.REJECTED);
         requestRepository.save(request);
     }
-    public void approveRequest(Long requestId, String mail) {
 
+    public void approveRequest(Long requestId, String mail) {
         User owner = userRepository.findByEmail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -69,7 +70,6 @@ public class AdoptionService {
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
         Pet pet = request.getPet();
-
         if (!pet.getOwner().getId().equals(owner.getId())) {
             throw new RuntimeException("Only owner can approve");
         }
@@ -81,16 +81,35 @@ public class AdoptionService {
         request.setStatus(AdoptionRequest.Status.APPROVED);
         requestRepository.save(request);
 
-        List<AdoptionRequest> others =
-                requestRepository.findByPetAndStatus(
-                        pet,
-                        AdoptionRequest.Status.PENDING
-                );
-
+        // Diğer bekleyen istekleri reddet
+        List<AdoptionRequest> others = requestRepository.findByPetAndStatus(pet, AdoptionRequest.Status.PENDING);
         for (AdoptionRequest r : others) {
             r.setStatus(AdoptionRequest.Status.REJECTED);
             requestRepository.save(r);
         }
     }
 
+    // YENİ: Bana gelen istekler (Benim petlerime yapılanlar)
+    public List<AdoptionRequest> getReceivedRequests(String mail) {
+        User owner = userRepository.findByEmail(mail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Basit bir yöntem: Tüm petlerimi bul, onlara gelen requestleri topla
+        List<Pet> myPets = petRepository.findByOwner(owner);
+        List<AdoptionRequest> allRequests = requestRepository.findAll();
+
+        return allRequests.stream()
+                .filter(r -> myPets.contains(r.getPet()))
+                .collect(Collectors.toList());
+    }
+
+    // YENİ: Benim gönderdiğim istekler
+    public List<AdoptionRequest> getSentRequests(String mail) {
+        User requester = userRepository.findByEmail(mail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return requestRepository.findAll().stream()
+                .filter(r -> r.getRequester().getId().equals(requester.getId()))
+                .collect(Collectors.toList());
+    }
 }
