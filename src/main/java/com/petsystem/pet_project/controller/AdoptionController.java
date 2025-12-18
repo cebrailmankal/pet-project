@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/adoptions")
+@CrossOrigin(origins = "*")
 public class AdoptionController {
 
     private final AdoptionService adoptionService;
@@ -24,5 +25,9 @@ public class AdoptionController {
     public void approve(@PathVariable Long id,
                         @RequestParam String mail) {
         adoptionService.approveRequest(id, mail);
+    }
+    @PostMapping("/{id}/reject")
+    public void reject(@PathVariable Long id, @RequestParam String mail) {
+        adoptionService.rejectRequest(id, mail);
     }
 }

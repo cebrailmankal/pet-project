@@ -44,10 +44,25 @@ public class AdoptionService {
 
         return requestRepository.save(request);
     }
+    public void rejectRequest(Long requestId, String mail) {
+        User owner = userRepository.findByEmail(mail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        AdoptionRequest request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+
+        Pet pet = request.getPet();
+
+        if (!pet.getOwner().getId().equals(owner.getId())) {
+            throw new RuntimeException("Only owner can reject requests");
+        }
+
+        request.setStatus(AdoptionRequest.Status.REJECTED);
+        requestRepository.save(request);
+    }
     public void approveRequest(Long requestId, String mail) {
 
-        User owner = userRepository.findByMail(mail)
+        User owner = userRepository.findByEmail(mail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         AdoptionRequest request = requestRepository.findById(requestId)
@@ -77,4 +92,5 @@ public class AdoptionService {
             requestRepository.save(r);
         }
     }
+
 }

@@ -11,7 +11,7 @@ public class Pet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private String image;
     private String name;
     private String species;
     private int age;

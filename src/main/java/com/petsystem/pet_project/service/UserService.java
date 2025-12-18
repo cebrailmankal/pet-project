@@ -26,4 +26,13 @@ public class UserService {
 
         return userRepository.save(user);
     }
+    public User login(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+
+        if (!user.getPassword().equals(password)) {
+            throw new RuntimeException("Şifre hatalı!");
+        }
+        return user;
+    }
 }
